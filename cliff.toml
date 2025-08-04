@@ -13,7 +13,7 @@ commit_parsers = [
 # See https://keats.github.io/tera/docs/#introduction
 body = """
 {% if version %}\
-    ## {{ version | trim_start_matches(pat="v") }} - {{ timestamp | date(format="%Y-%m-%d") }}\
+    ## {{ version | trim_start_matches(pat="v") }}\
 {% else %}\
     ## Unreleased\
 {% endif %}\
@@ -21,16 +21,18 @@ body = """
 {% for group, commits in commits | group_by(attribute="group") %}
     ### {{ group | upper_first }}
     {% for commit in commits %}\
-        - {{ commit.message | upper_first }}
-    {% endfor %}\
-{% endfor %}\n
-{% if commits | filter(attribute="breaking", value=true) %}\
-### Breaking change(s)
-{% for commit in commits %}
-    {% if commit.breaking %}\
+        - {{ commit.message | upper_first }}\
+        {% if commit.body %}\
+	    {{ commit.body }}\
+        {% endif %}\
+    {% endfor %}
+{% endfor %}
+{% set breakings = commits | filter(attribute="breaking", value=true) %}\
+{% if breakings %}\
+    ### Breaking change(s)
+    {% for commit in breakings %}
         - {{ commit.breaking_description | upper_first }}
-    {% endif %}\
-{% endfor %}\n
+    {% endfor %}\n
 {% endif %}\
 
 """
