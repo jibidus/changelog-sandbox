@@ -1,12 +1,13 @@
 [git]
 conventional_commits = true
-protect_breaking_commits = true
 commit_parsers = [
     { message = "^fix", group = "Bug Fixes"},
     { message = "^feat", group = "Features"},
+    { message = "^deps", group = "Upgrades"},
     { message = "^chore", skip = true},
-    { message = "^Merging", skip = true },
 ]
+protect_breaking_commits = true
+filter_commits = true
 
 [changelog]
 # A Tera template to be rendered for each release in the changelog.
@@ -18,12 +19,12 @@ body = """
     # Unreleased
 {% endif %}\
 
-{% for group, commits in commits | group_by(attribute="group") %}
+{% for group, commits in commits | filter(attribute="merge_commit", value=false) | group_by(attribute="group") %}
     ## {{ group | upper_first }}
     {% for commit in commits %}\
         - {{ commit.message | upper_first }}
         {% if commit.body %}\
-	    {{ commit.body }}\
+            {{ commit.body }}\
         {% endif %}\
     {% endfor %}\
 {% endfor %}
