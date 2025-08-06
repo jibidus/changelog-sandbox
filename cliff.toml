@@ -1,10 +1,12 @@
 [git]
 conventional_commits = true
+# Hijack scope attribute below to prevent chore commits to be listed. We cannot
+# skip them explicitelly, otherwise their breaking change would also be skipped.
 commit_parsers = [
-    { message = "^fix", group = "Bug Fixes"},
-    { message = "^feat", group = "Features"},
-    { message = "^deps", group = "Upgrades"},
-    { message = "^chore", skip = true},
+    { message = "^fix", group = "Bug Fixes", scope = "keep"},
+    { message = "^feat", group = "Features", scope = "keep"},
+    { message = "^deps", group = "Upgrades", scope = "keep"},
+    { message = "^chore", scope = "skip"},
 ]
 protect_breaking_commits = true
 filter_commits = true
@@ -19,7 +21,8 @@ body = """
     # Unreleased
 {% endif %}\
 
-{% for group, commits in commits | filter(attribute="merge_commit", value=false) | group_by(attribute="group") %}
+{% for group, commits in commits | filter(attribute="merge_commit", value=false)
+| filter(attribute="scope", value="keep") | group_by(attribute="group") %}
     ## {{ group | upper_first }}
     {% for commit in commits %}\
         - {{ commit.message | upper_first }}
@@ -27,10 +30,10 @@ body = """
             {{ commit.body }}\
         {% endif %}\
     {% endfor %}\
-{% endfor %}
+{% endfor %}\
 
 {% set breakings = commits | filter(attribute="breaking", value=true) %}\
-{% if breakings %}\
+{% if breakings %}
     ## Breaking change(s)
     {% for commit in breakings %}\
         - {{ commit.breaking_description | upper_first }}
